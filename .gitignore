@@ -1,6 +1,7 @@
 build
 **.egg-info
 venv
+.venv
 .DS_Store
 notebooks/*
 tests/__pycache__
