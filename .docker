@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+ 
+FROM python:3.11
+ 
+WORKDIR /
+ 
+# Update the package list and install gunicorn
+RUN apt-get update && apt-get install -y gunicorn && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Install the local vanna package as a module
+COPY . . 
+RUN pip3 install --no-cache-dir -e .
+ 
+EXPOSE 8084
+
+CMD ["python", "app.py"]
+
+# ENTRYPOINT ["gunicorn","--config", "gunicorn.conf.py" ,"-b", "0.0.0.0:80", "app:app"]
