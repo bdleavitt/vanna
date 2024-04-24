@@ -3,20 +3,24 @@
 FROM python:3.11
  
 WORKDIR /
- 
-# Update the package list and install gunicorn
-RUN apt-get update && apt-get install -y gunicorn && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
-
-# Install the local vanna package as a module
+## Copy everything
 COPY . . 
-RUN pip3 install --no-cache-dir -e .
- 
+
+## Install the ODBC dependencies
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+RUN mv microsoft.gpg /etc/apt/trusted.gpg.d/
+RUN echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list
+RUN apt-get update
+RUN ACCEPT_EULA=Y apt-get install -y msodbcsql17
+
+## Upgrade pip and install Python dependencies
+RUN pip install --upgrade pip && pip install --no-cache-dir -r ./requirements.txt
+
+## Install the local directory as a package
+RUN pip install --no-cache-dir .
+
+# Port 8084
 EXPOSE 8084
 
 CMD ["python", "app.py"]
-
-# ENTRYPOINT ["gunicorn","--config", "gunicorn.conf.py" ,"-b", "0.0.0.0:80", "app:app"]
